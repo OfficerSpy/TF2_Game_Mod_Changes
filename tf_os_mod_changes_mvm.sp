@@ -18,7 +18,7 @@ public Plugin myinfo =
 	name = "[TF2] Officer Spy Game Mod Changes MvM",
 	author = "Officer Spy",
 	description = "Game-specific changes specifically for Mann vs Machine.",
-	version = "0.0.0",
+	version = "1.0.0",
 	url = ""
 };
 
@@ -91,16 +91,6 @@ public Action Player_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 stock bool IsValidClientIndex(int client)
 {
 	return 0 < client <= MaxClients && IsClientInGame(client);
-}
-
-stock float ClampFloat(const float val, const float minVal, const float maxVal)
-{
-	if (val < minVal)
-		return minVal;
-	else if (val > maxVal)
-		return maxVal;
-	else
-		return val;
 }
 
 stock bool IsSentryBuster(int client)

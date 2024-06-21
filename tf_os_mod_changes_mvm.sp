@@ -5,20 +5,23 @@
 
 #include <stocklib_officerspy/tf/tf_gamerules>
 #include <stocklib_officerspy/tf/tf_player>
+#include <stocklib_officerspy/tf/tf_obj>
 
 #define TF_DMG_CUSTOM_NONE	0
 
+//The overriden damage from sentry bsuters against other giant robots in CTFPlayer::OnTakeDamage
 #define SB_MAX_DMG_VS_MINIBOSS	600.0
 
 ConVar os_gmc_mvm_bot_backstab_fix;
 ConVar os_gmc_mvm_sentrybuster_damage_fix;
+ConVar os_gmc_mvm_miniboss_kill_object_on_touch;
 
 public Plugin myinfo =
 {
 	name = "[TF2] Officer Spy Game Mod Changes MvM",
 	author = "Officer Spy",
 	description = "Game-specific changes specifically for Mann vs Machine.",
-	version = "1.0.0",
+	version = "1.0.1",
 	url = ""
 };
 
@@ -26,6 +29,7 @@ public void OnPluginStart()
 {
 	os_gmc_mvm_bot_backstab_fix = CreateConVar("sm_os_gmc_mvm_bot_backstab_fix", "1", "Fix bot players instantly killing MiniBosses with backstabs.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	os_gmc_mvm_sentrybuster_damage_fix = CreateConVar("sm_os_gmc_mvm_sentrybuster_damage_fix", "1", "Fix sentry busters instantly killing human MiniBosses and RED MiniBosses.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	os_gmc_mvm_miniboss_kill_object_on_touch = CreateConVar("sm_os_gmc_mvm_miniboss_kill_object_on_touch", "1", "Let human MiniBosses kill objects on touch.", FCVAR_NOTIFY);
 }
 
 public void OnMapStart()
@@ -37,13 +41,14 @@ public void OnMapStart()
 public void OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, Player_OnTakeDamage);
+	SDKHook(client, SDKHook_Touch, Player_TouchPost);
 }
 
 public Action Player_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	bool bChanged = false;
 	
-	if (IsValidClientIndex(attacker))
+	if (BaseEntity_IsPlayer(attacker))
 	{
 		if (os_gmc_mvm_bot_backstab_fix.BoolValue)
 		{
@@ -88,15 +93,38 @@ public Action Player_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 	return bChanged ? Plugin_Changed : Plugin_Continue;
 }
 
-stock bool IsValidClientIndex(int client)
+public void Player_TouchPost(int entity, int other)
 {
-	return 0 < client <= MaxClients && IsClientInGame(client);
+	if (os_gmc_mvm_miniboss_kill_object_on_touch.BoolValue)
+	{
+		if (!IsFakeClient(entity))
+		{
+			if (TF2_IsMiniBoss(entity))
+			{
+				if (BaseEntity_IsBaseObject(other))
+				{
+					if (TF2_GetObjectType(other) != TFObject_Sentry || TF2_IsMiniBuilding(other))
+					{
+						float damage = float(BaseEntity_GetHealth(other));
+						//Do we really care about damage force?
+						
+						SDKHooks_TakeDamage(other, entity, entity, 4 * damage, DMG_BLAST);
+					}
+				}
+			}
+		}
+	}
 }
 
-stock bool IsSentryBuster(int client)
+bool IsSentryBuster(int client)
 {
 	//TODO: find a better way to tell
 	char model[PLATFORM_MAX_PATH]; GetClientModel(client, model, PLATFORM_MAX_PATH);
 	
 	return StrEqual(model, "models/bots/demo/bot_sentry_buster.mdl");
+}
+
+stock bool IsValidClientIndex(int client)
+{
+	return 0 < client <= MaxClients && IsClientInGame(client);
 }

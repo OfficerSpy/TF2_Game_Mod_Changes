@@ -21,7 +21,7 @@ public Plugin myinfo =
 	name = "[TF2] Officer Spy Game Mod Changes MvM",
 	author = "Officer Spy",
 	description = "Game-specific changes specifically for Mann vs Machine.",
-	version = "1.0.1",
+	version = "1.0.2",
 	url = ""
 };
 
@@ -66,7 +66,7 @@ public Action Player_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 		
 		if (os_gmc_mvm_sentrybuster_damage_fix.BoolValue)
 		{
-			if (damagecustom == TF_DMG_CUSTOM_NONE && damagetype & DMG_BLAST && damage > SB_MAX_DMG_VS_MINIBOSS && IsSentryBuster(attacker) && BasePlayer_IsBot(attacker) && TF2_IsMiniBoss(victim))
+			if (damagecustom == TF_DMG_CUSTOM_NONE && damagetype & DMG_BLAST && damage > SB_MAX_DMG_VS_MINIBOSS && IsSentryBuster(attacker) && !IsSentryBuster(victim) && BasePlayer_IsBot(attacker) && TF2_IsMiniBoss(victim))
 			{
 				if (BasePlayer_IsBot(victim))
 				{
